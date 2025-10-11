@@ -289,8 +289,9 @@ class FuzzyTOPSIS:
         report.append("- **D_minus** - расстояние до отрицательного идеального решения")
         report.append("- **Коэффициент близости** = D_minus / (D_plus + D_minus)")
 
+        report.append("")
         report.append("| Альтернатива | D_plus | D_minus | Коэффициент близости |")
-        report.append("|-------------|--------|---------|---------------------|")
+        report.append("|--------------|--------|---------|----------------------|")
 
         for _, row in self.results.iterrows():
             report.append(
