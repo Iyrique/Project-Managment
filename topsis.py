@@ -191,177 +191,163 @@ class FuzzyTOPSIS:
         return self.results
 
     def generate_report(self) -> str:
-        """Генерация полного отчета с описаниями и таблицами"""
+        """Генерация полного отчета в Markdown формате"""
 
         report = []
-        report.append("=" * 80)
-        report.append("📊 ПОЛНЫЙ ОТЧЕТ АНАЛИЗА FUZZY TOPSIS")
-        report.append("=" * 80)
+        report.append("# 📊 ПОЛНЫЙ ОТЧЕТ АНАЛИЗА FUZZY TOPSIS")
+        report.append("---")
 
         # 1. Описание методологии
-        report.append("\n1. МЕТОДОЛОГИЯ АНАЛИЗА")
-        report.append("-" * 40)
+        report.append("## 1. МЕТОДОЛОГИЯ АНАЛИЗА")
         methodology = """
-        Метод Fuzzy TOPSIS (Technique for Order Preference by Similarity to Ideal Solution)
-        используется для решения задач многокритериального принятия решений в условиях 
-        неопределенности. Основные этапы метода:
+        Метод **Fuzzy TOPSIS** (Technique for Order Preference by Similarity to Ideal Solution) 
+        используется для решения задач многокритериального принятия решений в условиях неопределенности.
 
-        • Нормализация матрицы решений
-        • Определение нечетких идеальных решений (FPIS и FNIS)
-        • Расчет расстояний до идеальных решений
-        • Расчет коэффициентов близости и ранжирование альтернатив
+        **Основные этапы метода:**
+        - Нормализация матрицы решений
+        - Определение нечетких идеальных решений (FPIS и FNIS)
+        - Расчет расстояний до идеальных решений
+        - Расчет коэффициентов близости и ранжирование альтернатив
 
-        Используется треугольные нечеткие числа вида (a, b, c), где:
-        a - пессимистичная оценка, b - наиболее вероятная, c - оптимистичная оценка.
+        **Треугольные нечеткие числа:** (a, b, c)
+        - a - пессимистичная оценка
+        - b - наиболее вероятная оценка  
+        - c - оптимистичная оценка
         """
         report.append(textwrap.dedent(methodology))
 
         # 2. Исходные данные
-        report.append("\n2. ИСХОДНЫЕ ДАННЫЕ")
-        report.append("-" * 40)
-        report.append(f"Количество альтернатив: {self.n_alternatives}")
-        report.append(f"Количество критериев: {self.n_criteria}")
-        report.append(f"Параметр метрики Минковского (p): {self.p}")
+        report.append("## 2. ИСХОДНЫЕ ДАННЫЕ")
+        report.append(f"- **Количество альтернатив:** {self.n_alternatives}")
+        report.append(f"- **Количество критериев:** {self.n_criteria}")
+        report.append(f"- **Параметр метрики Минковского (p):** {self.p}")
 
-        report.append("\nАльтернативы для анализа:")
+        report.append("\n**Альтернативы для анализа:**")
         for i, alt in enumerate(self.alternatives, 1):
             report.append(f"  {i}. {alt}")
 
-        report.append("\nКритерии оценки:")
+        report.append("\n**Критерии оценки:**")
         for i, (criterion, benefit) in enumerate(zip(self.criteria_names, self.benefit_criteria), 1):
-            criterion_type = "Beneficial (больше = лучше)" if benefit else "Cost (меньше = лучше)"
-            report.append(f"  {i}. {criterion} - {criterion_type}")
+            criterion_type = "🟢 Beneficial (больше = лучше)" if benefit else "🔴 Cost (меньше = лучше)"
+            report.append(f"  {i}. **{criterion}** - {criterion_type}")
 
         # 3. Детальная таблица исходных данных
-        report.append("\n3. ТАБЛИЦА ИСХОДНЫХ ДАННЫХ")
-        report.append("-" * 40)
+        report.append("## 3. ТАБЛИЦА ИСХОДНЫХ ДАННЫХ")
 
-        detailed_original = []
+        # Создаем Markdown таблицу
+        report.append("| Альтернатива | Сложность | Современность | Библиотеки | Универсальность |")
+        report.append("|-------------|-----------|---------------|------------|----------------|")
+
         for alt in self.alternatives:
-            row = {'Альтернатива': alt}
+            row = [alt]
             for criterion in self.criteria_names:
-                row[criterion] = self.original_data.loc[alt, criterion]
-            detailed_original.append(row)
-
-        df_detailed = pd.DataFrame(detailed_original)
-        report.append(df_detailed.to_string(index=False))
+                triplet = self.original_data.loc[alt, criterion]
+                # Форматируем triplet для лучшей читаемости
+                formatted_triplet = f"({triplet[0]}, {triplet[1]}, {triplet[2]})"
+                row.append(formatted_triplet)
+            report.append("| " + " | ".join(row) + " |")
 
         # 4. Веса критериев
-        report.append("\n4. ВЕСА КРИТЕРИЕВ")
-        report.append("-" * 40)
-        weights_info = []
-        for i, (criterion, weight) in enumerate(zip(self.criteria_names, self.criteria_weights), 1):
-            weights_info.append({
-                'Критерий': criterion,
-                'Вес': f"{weight:.3f}",
-                'Важность': f"{(weight / sum(self.criteria_weights)) * 100:.1f}%"
-            })
-        df_weights = pd.DataFrame(weights_info)
-        report.append(df_weights.to_string(index=False))
+        report.append("## 4. ВЕСА КРИТЕРИЕВ")
+
+        report.append("| Критерий | Вес | Важность |")
+        report.append("|----------|-----|----------|")
+        for criterion, weight in zip(self.criteria_names, self.criteria_weights):
+            importance_pct = (weight / sum(self.criteria_weights)) * 100
+            report.append(f"| {criterion} | {weight:.3f} | {importance_pct:.1f}% |")
 
         # 5. Нормализованная матрица
-        report.append("\n5. НОРМАЛИЗОВАННАЯ МАТРИЦА РЕШЕНИЙ")
-        report.append("-" * 40)
-        report.append("Все значения приведены к безразмерному виду [0, 1]")
+        report.append("## 5. НОРМАЛИЗОВАННАЯ МАТРИЦА РЕШЕНИЙ")
+        report.append("*Все значения приведены к безразмерному виду [0, 1]*")
 
-        detailed_normalized = []
+        report.append("| Альтернатива | Сложность | Современность | Библиотеки | Универсальность |")
+        report.append("|-------------|-----------|---------------|------------|----------------|")
+
         for alt in self.alternatives:
-            row = {'Альтернатива': alt}
+            row = [alt]
             for criterion in self.criteria_names:
-                row[criterion] = self.normalized_data.loc[alt, criterion]
-            detailed_normalized.append(row)
-
-        df_normalized = pd.DataFrame(detailed_normalized)
-        report.append(df_normalized.to_string(index=False))
+                triplet = self.normalized_data.loc[alt, criterion]
+                # Округляем для читаемости
+                formatted_triplet = f"({triplet[0]:.3f}, {triplet[1]:.3f}, {triplet[2]:.3f})"
+                row.append(formatted_triplet)
+            report.append("| " + " | ".join(row) + " |")
 
         # 6. Идеальные решения
-        report.append("\n6. ИДЕАЛЬНЫЕ РЕШЕНИЯ")
-        report.append("-" * 40)
-        ideal_solutions = []
+        report.append("## 6. ИДЕАЛЬНЫЕ РЕШЕНИЯ")
+
+        report.append("| Критерий | FPIS | FNIS |")
+        report.append("|----------|------|------|")
         for criterion in self.criteria_names:
-            ideal_solutions.append({
-                'Критерий': criterion,
-                'FPIS': self.fpis[criterion],
-                'FNIS': self.fnis[criterion]
-            })
-        df_ideal = pd.DataFrame(ideal_solutions)
-        report.append(df_ideal.to_string(index=False))
+            fpis_formatted = f"({self.fpis[criterion][0]:.3f}, {self.fpis[criterion][1]:.3f}, {self.fpis[criterion][2]:.3f})"
+            fnis_formatted = f"({self.fnis[criterion][0]:.3f}, {self.fnis[criterion][1]:.3f}, {self.fnis[criterion][2]:.3f})"
+            report.append(f"| {criterion} | {fpis_formatted} | {fnis_formatted} |")
 
         # 7. Расстояния и коэффициенты близости
-        report.append("\n7. РЕЗУЛЬТАТЫ РАСЧЕТОВ")
-        report.append("-" * 40)
-        report.append("D_plus - расстояние до положительного идеального решения")
-        report.append("D_minus - расстояние до отрицательного идеального решения")
-        report.append("Коэффициент близости = D_minus / (D_plus + D_minus)")
+        report.append("## 7. РЕЗУЛЬТАТЫ РАСЧЕТОВ")
 
-        results_display = self.results.copy()
-        results_display['D_plus'] = results_display['D_plus'].round(6)
-        results_display['D_minus'] = results_display['D_minus'].round(6)
-        results_display['Коэффициент_близости'] = results_display['Коэффициент_близости'].round(6)
-        report.append(results_display.to_string(index=False))
+        report.append("- **D_plus** - расстояние до положительного идеального решения")
+        report.append("- **D_minus** - расстояние до отрицательного идеального решения")
+        report.append("- **Коэффициент близости** = D_minus / (D_plus + D_minus)")
+
+        report.append("| Альтернатива | D_plus | D_minus | Коэффициент близости |")
+        report.append("|-------------|--------|---------|---------------------|")
+
+        for _, row in self.results.iterrows():
+            report.append(
+                f"| {row['Альтернатива']} | {row['D_plus']:.6f} | {row['D_minus']:.6f} | {row['Коэффициент_близости']:.6f} |")
 
         # 8. Итоговое ранжирование
-        report.append("\n8. ИТОГОВОЕ РАНЖИРОВАНИЕ АЛЬТЕРНАТИВ")
-        report.append("-" * 40)
+        report.append("## 8. ИТОГОВОЕ РАНЖИРОВАНИЕ АЛЬТЕРНАТИВ")
 
-        ranking_info = []
+        report.append("| Ранг | Альтернатива | Коэффициент | Статус |")
+        report.append("|------|-------------|-------------|--------|")
+
         for _, row in self.results.iterrows():
-            ranking_info.append({
-                'Ранг': int(row['Ранг']),
-                'Альтернатива': row['Альтернатива'],
-                'Коэффициент': f"{row['Коэффициент_близости']:.4f}",
-                'Статус': '🏆 ЛУЧШАЯ' if row['Ранг'] == 1 else ''
-            })
-
-        df_ranking = pd.DataFrame(ranking_info)
-        report.append(df_ranking.to_string(index=False))
+            status = "🏆 **ЛУЧШАЯ**" if row['Ранг'] == 1 else ""
+            report.append(
+                f"| {int(row['Ранг'])} | {row['Альтернатива']} | {row['Коэффициент_близости']:.4f} | {status} |")
 
         # 9. Анализ и рекомендации
-        report.append("\n9. АНАЛИЗ И РЕКОМЕНДАЦИИ")
-        report.append("-" * 40)
+        report.append("## 9. АНАЛИЗ И РЕКОМЕНДАЦИИ")
 
         best_alt = self.results.iloc[0]
         worst_alt = self.results.iloc[-1]
 
         analysis = f"""
-        На основе проведенного анализа методом Fuzzy TOPSIS:
+        **Результаты анализа методом Fuzzy TOPSIS:**
 
-        • Наилучшая альтернатива: {best_alt['Альтернатива']} 
+        - **Наилучшая альтернатива:** **{best_alt['Альтернатива']}**  
           (коэффициент близости: {best_alt['Коэффициент_близости']:.4f})
 
-        • Наихудшая альтернатива: {worst_alt['Альтернатива']}
+        - **Наихудшая альтернатива:** {worst_alt['Альтернатива']}  
           (коэффициент близости: {worst_alt['Коэффициент_близости']:.4f})
 
-        • Размах коэффициентов: {best_alt['Коэффициент_близости'] - worst_alt['Коэффициент_близости']:.4f}
+        - **Размах коэффициентов:** {best_alt['Коэффициент_близости'] - worst_alt['Коэффициент_близости']:.4f}
 
-        Рекомендуется к реализации: {best_alt['Альтернатива']}
+        **🎯 Рекомендация:** К реализации рекомендуется **{best_alt['Альтернатива']}**
         """
         report.append(textwrap.dedent(analysis))
 
-        # 10. Чувствительность анализа
-        report.append("\n10. АНАЛИЗ ЧУВСТВИТЕЛЬНОСТИ")
-        report.append("-" * 40)
+        # 10. Анализ чувствительности
+        report.append("## 10. АНАЛИЗ ЧУВСТВИТЕЛЬНОСТИ")
 
         closeness_values = self.results['Коэффициент_близости'].values
         mean_closeness = np.mean(closeness_values)
         std_closeness = np.std(closeness_values)
 
         sensitivity = f"""
-        • Средний коэффициент близости: {mean_closeness:.4f}
-        • Стандартное отклонение: {std_closeness:.4f}
-        • Коэффициент вариации: {(std_closeness / mean_closeness) * 100:.2f}%
+        - **Средний коэффициент близости:** {mean_closeness:.4f}
+        - **Стандартное отклонение:** {std_closeness:.4f}
+        - **Коэффициент вариации:** {(std_closeness / mean_closeness) * 100:.2f}%
 
-        Чем выше стандартное отклонение, тем более выражено преимущество 
-        лучшей альтернативы над остальными.
+        *Чем выше стандартное отклонение, тем более выражено преимущество лучшей альтернативы над остальными.*
         """
         report.append(textwrap.dedent(sensitivity))
 
-        report.append("\n" + "=" * 80)
-        report.append("Отчет сгенерирован автоматически с использованием метода Fuzzy TOPSIS")
-        report.append("=" * 80)
+        report.append("---")
+        report.append("*Отчет сгенерирован автоматически с использованием метода Fuzzy TOPSIS*")
 
         return "\n".join(report)
-
     def solve(self) -> pd.DataFrame:
         """Полное решение методом Fuzzy TOPSIS"""
         print("🎯 ЗАПУСК МЕТОДА FUZZY TOPSIS")
@@ -443,17 +429,22 @@ final_results = topsis_analysis.solve()
 
 # ГЕНЕРАЦИЯ ПОЛНОГО ОТЧЕТА
 print("\n" + "=" * 80)
-print("📈 ГЕНЕРАЦИЯ ПОЛНОГО ОТЧЕТА")
+print("📈 ГЕНЕРАЦИЯ ПОЛНОГО ОТЧЕТА В MARKDOWN")
 print("=" * 80)
 
 full_report = topsis_analysis.generate_report()
 print(full_report)
 
-# Сохранение отчета в файл
+# Сохранение отчета в MD файл
 with open('fuzzy_topsis_report.md', 'w', encoding='utf-8') as f:
     f.write(full_report)
 
-print("\n💾 Отчет сохранен в файл: fuzzy_topsis_report.txt")
+print("\n💾 Отчет сохранен в файл: fuzzy_topsis_report.md")
+
+# Также сохраним красивую текстовую версию для консоли
+#with open('fuzzy_topsis_report.txt', 'w', encoding='utf-8') as f:
+ #   # Здесь можно сохранить текстовую версию без Markdown разметки
+  #  f.write(full_report.replace('**', '').replace('## ', '\n').replace('# ', '\n'))
 
 # ДОПОЛНИТЕЛЬНАЯ ВИЗУАЛИЗАЦИЯ
 print("\n" + "=" * 60)
