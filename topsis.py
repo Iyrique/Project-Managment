@@ -218,11 +218,11 @@ class FuzzyTOPSIS:
 
         # 2. Исходные данные
         report.append("## 2. ИСХОДНЫЕ ДАННЫЕ")
-        report.append(f"- **Количество альтернатив:** {self.n_alternatives}")
+        report.append(f"- **Концепции:** {self.n_alternatives}")
         report.append(f"- **Количество критериев:** {self.n_criteria}")
         report.append(f"- **Параметр метрики Минковского (p):** {self.p}")
 
-        report.append("\n**Альтернативы для анализа:**")
+        report.append("\n**Концепции для анализа:**")
         for i, alt in enumerate(self.alternatives, 1):
             report.append(f"  {i}. {alt}")
 
@@ -346,7 +346,6 @@ class FuzzyTOPSIS:
         report.append(textwrap.dedent(sensitivity))
 
         report.append("---")
-        report.append("*Отчет сгенерирован автоматически с использованием метода Fuzzy TOPSIS*")
 
         return "\n".join(report)
     def solve(self) -> pd.DataFrame:
