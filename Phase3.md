@@ -9,11 +9,13 @@ Use cases представлены **[здесь](use_cases.md)**.
 
 ## COSMIC Function Points
 
-Прикинуты трудозатраты **[]()** !!! ДОПОЛНИТЬ
+Прикинуты трудозатраты **[здесь (CFP.xlsx)](CFP.xlsx)** 
+
+![img.png](imgs/cfp.png)
 
 ## Use Case Points
 
-Прикинуты трудозатраты **[здесь](Use%20Case%20Points.xlsx)**
+Прикинуты трудозатраты **[здесь (UCP.xlsx)](Use%20Case%20Points.xlsx)**
 
 
 ## Финансовая оценка проекта
